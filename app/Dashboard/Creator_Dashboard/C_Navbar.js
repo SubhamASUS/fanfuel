@@ -11,7 +11,7 @@ const C_Navbar = () => {
   if (pathname && pathname.startsWith("/Dashboard/Creator_Dashboard/Dashboard2")) {
     return null;
   }
-  const noNavbarRoutes = ["/Dashboard/Creator_Dashboard/Create"]
+  const noNavbarRoutes = ["/Dashboard/Creator_Dashboard/Create","/Dashboard/Creator_Dashboard/First_Dash/Edit_P"]
   if (noNavbarRoutes.includes(pathname)) {
     return null;
   }

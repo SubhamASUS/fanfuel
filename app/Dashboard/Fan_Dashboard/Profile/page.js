@@ -1,10 +1,13 @@
 "use client"
-import React from 'react'
+import React, { use } from 'react'
 import { useState } from 'react'
+import { getAuth, onAuthStateChanged, updateProfile } from 'firebase/auth'
+import { app } from '../../../firebase.js'
+import { useEffect } from 'react'
 
 export default function page() {
   const [open, setopen] = useState(false)
-   const [open1, setopen1] = useState(false)
+  const [open1, setopen1] = useState(false)
   const [selected, setselected] = useState("English(us")
   const [Curr, setCurr] = useState("Choose Currency")
   const handleSelect = (lang) => {
@@ -15,24 +18,68 @@ export default function page() {
     setCurr(lang)
     setopen1(false)
   }
+  const [userInfo, setUserInfo] = useState({
+    name: "Display Name",
+    email: "",
+    image: "/profile.svg",
+    Nationality: "",
+  })
+  useEffect(() => {
+    const auth = getAuth(app);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserInfo({
+          name: user.displayName || "Display Name",
+          email: user.email || "",
+          image: user.photoURL || "/profile.svg",
+        });
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleSave = () => {
+    const auth = getAuth(app);
+    if (auth.currentUser) {
+      updateProfile(auth.currentUser, {
+        displayName: userInfo.name,
+        photoURL: userInfo.image,
+      })
+        .then(() => {
+          alert("Profile Updated Successfully");
+          window.location.reload()
+        })
+        .catch((error) => {
+          console.error("error updating profile", error);
+
+        });
+    }
+  }
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold text-center ">Profile</h1>
       <div className="info mx-auto w-[55%] h-[78vh] bg-slate-800  mt-5 p-2 rounded-2xl " >
         <h2 className="font-bold text-xl text-center">My Information</h2>
         <div className="img relative w-35 mx-auto mt-3">
-          <img className="h-35 w-35 border-2 border-slate-700 rounded-full" src="/dog.jpg" alt="" />
+          <img className="h-35 w-35 border-2 border-slate-700 rounded-full" src={userInfo.image} alt="" />
           <button className="cursor-pointer absolute right-1 bottom-1 ">
             <img className="h-9 rounded-3xl border-2 border-slate-700 bg-gray-300 p-1 " src="/edit.svg" alt="" />
           </button>
         </div>
         <div className="mt-3 flex flex-col gap-3">
           <span className="font-bold text-sm">Display Name</span>
-          <input className="border-2 border-slate-500 rounded-2xl px-2.5 py-1" type="text" />
+          <input className="border-2 border-slate-500 rounded-2xl px-2.5 py-1" type="text"
+            defaultValue={userInfo.name}
+            onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
+          />
         </div>
         <div className="mt-3 flex flex-col gap-3">
           <span className="font-bold text-sm">Email</span>
-          <input className="border-2 border-slate-500 rounded-2xl px-2.5  py-1" type="text" />
+          <input className="border-2 border-slate-500 rounded-2xl px-2.5  py-1" type="text"
+            defaultValue={userInfo.email}
+            key={userInfo.email}
+            readOnly
+          />
         </div>
         <div className="mt-3 flex flex-col gap-3">
           <span className="font-bold text-sm">Nationality </span>
@@ -43,7 +90,7 @@ export default function page() {
           <input className="border-2 border-slate-500 rounded-2xl px-2.5 py-1" type="text" />
         </div>
         <div className="save flex justify-center   items-center" >
-          <button type="button" className="w-20 mt-3 cursor-pointer text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">save</button>
+          <button onClick={handleSave} type="button" className="w-20 mt-3 cursor-pointer text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2">save</button>
         </div>
       </div>
       <div className="info mx-auto w-[55%] h-[50vh] bg-slate-800  mt-5 p-2 rounded-2xl " >
@@ -110,26 +157,26 @@ export default function page() {
         <h2 className="font-bold text-xl text-center">Currency Preference</h2>
         <p className="text-sm mt-3 text-slate-400">Choose your preffered Currency you like to receive aur give.</p>
 
-        <button id="dropdownDefaultButton" onClick={()=>setopen1(!open1)} data-dropdown-toggle="dropdown" className="w-50 mt-3 text-white border-2 border-slate-700 focus:ring-1 focus:outline-none  font-medium rounded-lg text-l px-5 py-2.5 text-center inline-flex justify-between items-center " type="button">{Curr}<svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+        <button id="dropdownDefaultButton" onClick={() => setopen1(!open1)} data-dropdown-toggle="dropdown" className="w-50 mt-3 text-white border-2 border-slate-700 focus:ring-1 focus:outline-none  font-medium rounded-lg text-l px-5 py-2.5 text-center inline-flex justify-between items-center " type="button">{Curr}<svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
         </svg>
         </button>
-        <div id="dropdown" className={`z-10 ${open1?"block":"hidden"} bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700`}>
+        <div id="dropdown" className={`z-10 ${open1 ? "block" : "hidden"} bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700`}>
           <ul className="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
             <li>
-              <button onClick={()=> handleCurr("USD")} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">USD</button>
+              <button onClick={() => handleCurr("USD")} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">USD</button>
             </li>
             <li>
-              <button onClick={()=> handleCurr("INR")} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">INR</button>
+              <button onClick={() => handleCurr("INR")} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">INR</button>
             </li>
             <li>
-              <button onClick={()=> handleCurr("Pound")} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Pound</button>
+              <button onClick={() => handleCurr("Pound")} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Pound</button>
             </li>
             <li>
-              <button onClick={()=> handleCurr("Euro")} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Euro</button>
+              <button onClick={() => handleCurr("Euro")} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Euro</button>
             </li>
             <li>
-              <button onClick={()=> handleCurr("AUD")} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">AUD</button>
+              <button onClick={() => handleCurr("AUD")} className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">AUD</button>
             </li>
           </ul>
         </div>
